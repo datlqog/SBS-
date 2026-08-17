@@ -25,6 +25,7 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: 0;
+    pointer-events: none;
 }
 /* VOILE SOMBRE PAR-DESSUS LA VIDÉO */
 .overlay {
@@ -83,26 +84,20 @@ body {
 <body>
 <!-- VIDÉO EN ARRIÈRE-PLAN -->
 <video
+    id="bgvideo"
     class="video-background"
     autoplay
     muted
     loop
     playsinline
+    webkit-playsinline
     preload="auto"
     poster="video-poster.jpg"
     aria-hidden="true"
     role="presentation"
 >
-    <!-- WEBM (PRIORITÉ PERFORMANCE) -->
-    <source
-        src="3184eb260ffd4e3ab528f4e8ae29f7f8.webm"
-        type="video/webm"
-    >
-    <!-- FALLBACK QUICKTIME -->
-    <source
-        src="3184eb260ffd4e3ab528f4e8ae29f7f8.mov"
-        type="video/quicktime"
-    >
+    <!-- On utilise le fichier existant (chemin exact à la racine) -->
+    <source src="3184eb260ffd4e3ab528f4e8ae29f7f8.mov" type="video/quicktime">
 </video>
 <!-- ASSOMBRISSEMENT -->
 <div class="overlay"></div>
@@ -110,5 +105,20 @@ body {
 <main class="hero">
     <h1 class="logo">ST BARTH SOCIETY</h1>
 </main>
+
+<!-- Petit script de secours non intrusif : essaie de lancer la vidéo et, si l'autoplay est bloqué ou le format non pris en charge, on conserve le poster/fond sans affecter la page -->
+<script>
+  (function() {
+    var v = document.getElementById('bgvideo');
+    if (!v) return;
+    // Si la lecture échoue (autoplay bloqué / format non pris en charge), on laisse le poster / fond noir
+    var playPromise = v.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(function() {
+        // playback failed — on laisse le poster/overlay tel quel ; aucune autre action
+      });
+    }
+  })();
+</script>
 </body>
 </html>
