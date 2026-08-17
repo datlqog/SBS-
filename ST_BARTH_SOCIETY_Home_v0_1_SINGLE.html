@@ -25,7 +25,6 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: 0;
-    pointer-events: none;
 }
 /* VOILE SOMBRE PAR-DESSUS LA VIDÉO */
 .overlay {
@@ -82,25 +81,28 @@ body {
 </style>
 </head>
 <body>
-<!-- VIDÉO EN ARRIÈRE-PLAN (désactivée par défaut pour préserver l'UX) -->
+<!-- VIDÉO EN ARRIÈRE-PLAN -->
 <video
-    id="bgvideo"
     class="video-background"
+    autoplay
     muted
     loop
     playsinline
-    webkit-playsinline
-    preload="none"
+    preload="auto"
     poster="video-poster.jpg"
     aria-hidden="true"
     role="presentation"
 >
-    <!-- Placeholders pour sources optimisées (ajoute mp4/webm compatibles ici lorsqu'ils sont disponibles) -->
-    <!-- <source src="3184eb260ffd4e3ab528f4e8ae29f7f8.mp4" type="video/mp4"> -->
-    <!-- <source src="3184eb260ffd4e3ab528f4e8ae29f7f8.webm" type="video/webm"> -->
-
-    <!-- Fallback : fichier .mov actuellement présent à la racine -->
-    <source src="3184eb260ffd4e3ab528f4e8ae29f7f8.mov" type="video/quicktime">
+    <!-- WEBM (PRIORITÉ PERFORMANCE) -->
+    <source
+        src="3184eb260ffd4e3ab528f4e8ae29f7f8.webm"
+        type="video/webm"
+    >
+    <!-- FALLBACK QUICKTIME -->
+    <source
+        src="3184eb260ffd4e3ab528f4e8ae29f7f8.mov"
+        type="video/quicktime"
+    >
 </video>
 <!-- ASSOMBRISSEMENT -->
 <div class="overlay"></div>
@@ -108,56 +110,5 @@ body {
 <main class="hero">
     <h1 class="logo">ST BARTH SOCIETY</h1>
 </main>
-
-<!-- Script : active la lecture uniquement sur desktop avec bonne connexion ou après interaction utilisateur -->
-<script>
-(function(){
-  var v = document.getElementById('bgvideo');
-  if(!v) return;
-  // s'assurer que la vidéo est non-interactive
-  v.style.pointerEvents = 'none';
-
-  function isGoodConnection(){
-    try{
-      var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      if(conn && conn.effectiveType){
-        var et = conn.effectiveType || '';
-        if(et.indexOf('2g') !== -1 || et.indexOf('slow-2g') !== -1) return false;
-      }
-    }catch(e){}
-    return true;
-  }
-
-  var isDesktop = window.innerWidth >= 768;
-  var tryAuto = isDesktop && isGoodConnection();
-
-  function activateVideo(){
-    if(!v) return;
-    v.setAttribute('preload','auto');
-    var p = v.play();
-    if(p !== undefined){
-      p.catch(function(){ /* playback failed; keep poster/overlay */ });
-    }
-    window.removeEventListener('click', onUserInteract);
-    window.removeEventListener('touchstart', onUserInteract);
-  }
-
-  function onUserInteract(){ activateVideo(); }
-
-  if(tryAuto){
-    // tenter une lecture automatique discrète
-    setTimeout(function(){
-      var p = v.play();
-      if(p !== undefined){
-        p.catch(function(){ /* autoplay blocked or decode error */ });
-      }
-    }, 200);
-  }
-
-  // Activation fallback : lancer après première interaction utilisateur
-  window.addEventListener('click', onUserInteract, { once: true });
-  window.addEventListener('touchstart', onUserInteract, { once: true });
-})();
-</script>
 </body>
 </html>
