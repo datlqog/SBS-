@@ -82,21 +82,24 @@ body {
 </style>
 </head>
 <body>
-<!-- VIDÉO EN ARRIÈRE-PLAN -->
+<!-- VIDÉO EN ARRIÈRE-PLAN (désactivée par défaut pour préserver l'UX) -->
 <video
     id="bgvideo"
     class="video-background"
-    autoplay
     muted
     loop
     playsinline
     webkit-playsinline
-    preload="auto"
+    preload="none"
     poster="video-poster.jpg"
     aria-hidden="true"
     role="presentation"
 >
-    <!-- On utilise le fichier existant (chemin exact à la racine) -->
+    <!-- Placeholders pour sources optimisées (ajoute mp4/webm compatibles ici lorsqu'ils sont disponibles) -->
+    <!-- <source src="3184eb260ffd4e3ab528f4e8ae29f7f8.mp4" type="video/mp4"> -->
+    <!-- <source src="3184eb260ffd4e3ab528f4e8ae29f7f8.webm" type="video/webm"> -->
+
+    <!-- Fallback : fichier .mov actuellement présent à la racine -->
     <source src="3184eb260ffd4e3ab528f4e8ae29f7f8.mov" type="video/quicktime">
 </video>
 <!-- ASSOMBRISSEMENT -->
@@ -106,19 +109,55 @@ body {
     <h1 class="logo">ST BARTH SOCIETY</h1>
 </main>
 
-<!-- Petit script de secours non intrusif : essaie de lancer la vidéo et, si l'autoplay est bloqué ou le format non pris en charge, on conserve le poster/fond sans affecter la page -->
+<!-- Script : active la lecture uniquement sur desktop avec bonne connexion ou après interaction utilisateur -->
 <script>
-  (function() {
-    var v = document.getElementById('bgvideo');
-    if (!v) return;
-    // Si la lecture échoue (autoplay bloqué / format non pris en charge), on laisse le poster / fond noir
-    var playPromise = v.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(function() {
-        // playback failed — on laisse le poster/overlay tel quel ; aucune autre action
-      });
+(function(){
+  var v = document.getElementById('bgvideo');
+  if(!v) return;
+  // s'assurer que la vidéo est non-interactive
+  v.style.pointerEvents = 'none';
+
+  function isGoodConnection(){
+    try{
+      var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if(conn && conn.effectiveType){
+        var et = conn.effectiveType || '';
+        if(et.indexOf('2g') !== -1 || et.indexOf('slow-2g') !== -1) return false;
+      }
+    }catch(e){}
+    return true;
+  }
+
+  var isDesktop = window.innerWidth >= 768;
+  var tryAuto = isDesktop && isGoodConnection();
+
+  function activateVideo(){
+    if(!v) return;
+    v.setAttribute('preload','auto');
+    var p = v.play();
+    if(p !== undefined){
+      p.catch(function(){ /* playback failed; keep poster/overlay */ });
     }
-  })();
+    window.removeEventListener('click', onUserInteract);
+    window.removeEventListener('touchstart', onUserInteract);
+  }
+
+  function onUserInteract(){ activateVideo(); }
+
+  if(tryAuto){
+    // tenter une lecture automatique discrète
+    setTimeout(function(){
+      var p = v.play();
+      if(p !== undefined){
+        p.catch(function(){ /* autoplay blocked or decode error */ });
+      }
+    }, 200);
+  }
+
+  // Activation fallback : lancer après première interaction utilisateur
+  window.addEventListener('click', onUserInteract, { once: true });
+  window.addEventListener('touchstart', onUserInteract, { once: true });
+})();
 </script>
 </body>
 </html>
